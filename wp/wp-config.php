@@ -21,8 +21,7 @@
 $DB_NAME = getenv("MYSQL_DATABASE");
 $DB_USER = getenv("MYSQL_USER");
 $DB_PASSWORD = getenv("MYSQL_PASSWORD");
-$DB_SERVICE = getenv("MYSQL_SERVICE");
-$DB_HOST = "mysql"; // getenv(strtoupper($DB_SERVICE) . "_SERVICE_HOST");
+$DB_HOST = getenv("MYSQL_HOST");
 
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
@@ -53,14 +52,14 @@ define('DB_COLLATE', '');
  *
  * @since 2.6.0
  */
-define('AUTH_KEY',         'put your unique phrase here');
-define('SECURE_AUTH_KEY',  'put your unique phrase here');
-define('LOGGED_IN_KEY',    'put your unique phrase here');
-define('NONCE_KEY',        'put your unique phrase here');
-define('AUTH_SALT',        'put your unique phrase here');
-define('SECURE_AUTH_SALT', 'put your unique phrase here');
-define('LOGGED_IN_SALT',   'put your unique phrase here');
-define('NONCE_SALT',       'put your unique phrase here');
+define('AUTH_KEY',         'Fred was here!');
+define('SECURE_AUTH_KEY',  'Fred was here!');
+define('LOGGED_IN_KEY',    'Fred was here!');
+define('NONCE_KEY',        'Fred was here!');
+define('AUTH_SALT',        'Fred was here!');
+define('SECURE_AUTH_SALT', 'Fred was here!');
+define('LOGGED_IN_SALT',   'Fred was here!');
+define('NONCE_SALT',       'Fred was here!');
 
 /**#@-*/
 
