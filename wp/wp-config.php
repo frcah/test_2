@@ -36,8 +36,8 @@ define('DB_USER', $DB_USER);
 define('DB_PASSWORD', $DB_PASSWORD);
 
 /** MySQL hostname */
-//define('DB_HOST', $DB_HOST);
-define('DB_HOST', "127.0.0.1");
+define('DB_HOST', $DB_HOST);
+//define('DB_HOST', "127.0.0.1");
 
 
 
