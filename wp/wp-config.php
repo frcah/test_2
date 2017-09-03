@@ -47,6 +47,13 @@ define('DB_CHARSET', 'utf8');
 /** The Database Collate type. Don't change this if in doubt. */
 define('DB_COLLATE', '');
 
+
+/** Modify in place **/
+define('FS_METHOD','direct');
+
+
+
+
 /**#@+
  * Authentication Unique Keys and Salts.
  *
