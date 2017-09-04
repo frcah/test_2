@@ -1,0 +1,14 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: wp
+  spec:
+    port:
+      targetPort: 8080-tcp
+    to:
+      kind: Service
+      name: blog
+      weight: 100
+    wildcardPolicy: None

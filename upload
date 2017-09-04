@@ -1,0 +1,6 @@
+if [ $# -eq 0 ]
+  then
+    echo "I need a pod name to make contact"
+  else
+    oc rsync --no-perms=true wp $1:/opt/app-root/src -c blog
+fi
