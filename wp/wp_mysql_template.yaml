@@ -1,0 +1,263 @@
+---
+
+kind: Template
+apiVersion: v1
+metadata:
+  name: wp-mysql
+  annotations:
+    openshift.io/display-name: WP + MySQL
+    description: >
+      WordPress running on Openshift Online. Sinlge persistent volume for everything.
+    iconClass: icon-php
+labels:
+  template: wp-mysql
+
+
+parameters:
+  - name: X_SVC
+    description: Service name
+    value: test2
+    required: true
+
+  - name: X_SVC_HOST
+    description: optional exposed hostname to the service.
+    value:
+
+  - name: X_SRC_URL
+    description: git repo url (https://...git)
+    value: https://github.com/frcah/fch_tet2.git
+    required: true
+
+  - name: X_SRC_REF
+    description: optional git label
+
+  - name: X_SRC_DIR
+    description: Relative path in repo to the sources
+    value: wp
+
+  - name: X_SRC_HOOK
+    description: A secret string used to configure the GitHub webhook
+    generate: expression
+    from: "[a-zA-Z0-9]{40}"
+
+  - name: X_DB_NAME
+    description: Database name
+    value: wp
+    required: true
+
+  - name: X_DB_USER
+    description: Database user name
+    value: wp
+    required: true
+
+  - name: X_DB_PWD
+    description: Database user password
+	value: wp
+
+
+objects:
+  ############################
+  # Service
+  ############################
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: ${X_SVC}
+      annotations:
+        description: Service providing wp with mysql
+      labels:
+        app: ${X_SVC}
+    spec:
+      ports:
+        - name: 8080-tcp
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+        - name: 3306-tcp
+          port: 3306
+          protocol: TCP
+          targetPort: 3306
+      selector:
+        name: ${X_SVC}
+
+  ############################
+  # Route
+  ############################
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: ${X_SVC}
+      labels:
+        app: ${X_SVC}
+    spec:
+      host: ${X_SVC_HOST}
+	  port:
+	    targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: ${X_SVC}
+
+  ############################
+  # ImageStream
+  ############################
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      name: ${X_SVC}
+      annotations:
+        description: Keeps track of changes in the application image
+
+  ############################
+  # BuildConfig
+  ############################
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: ${X_SVC}
+      annotations:
+        description: Defines how to build the application
+      labels:
+        app: ${X_SVC}
+
+    spec:
+      source:
+        type: Git
+        git:
+          uri: ${X_SRC_URL}
+          ref: ${X_SRC_REF}
+        contextDir: ${X_SRC_DIR}
+      strategy:
+        type: Source
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            namespace: openshift
+            name: php:7.0
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${X_SVC}:latest
+      triggers:
+        - type: ImageChange
+        - type: ConfigChange
+        - type: GitHub
+          github:
+            secret: ${X_SRC_HOOK}
+
+  ############################
+  # PersistentVolumeClaim
+  ############################
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: mydisk
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+
+  ############################
+  # DeploymentConfig
+  ############################
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: ${X_SVC}
+      annotations:
+        description: Defines how to deploy the application server
+      labels:
+        app: ${X_SVC}
+    spec:
+      strategy:
+        type: Recreate
+      triggers:
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - ${X_SVC}
+            from:
+              kind: ImageStreamTag
+              name: ${X_SVC}:latest
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - mysql
+            from:
+              kind: ImageStreamTag
+              name: mysql:5.7
+        - type: ConfigChange
+      replicas: 1
+      selector:
+        app: ${X_SVC}
+      template:
+        metadata:
+          name: ${X_SVC}
+          labels:
+            name: ${X_SVC}
+        spec:
+          containers:
+            - name: ${X_SVC}
+              image: ${X_SVC}
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              env:
+                - name: MYSQL_DATABASE
+                  value: ${X_DB_NAME}
+                - name: MYSQL_PASSWORD
+                  value: ${X_DB_PWD}
+                - name: MYSQL_SERVICE
+                  value: ${X_SVC}
+                - name: MYSQL_USER
+                  value: ${X_DB_USER}
+              volumeMounts:
+                - mountPath: /opt/app-root/src
+                  name: volume-mydisk
+                  subPath: html
+            - name: mysql
+              image: openshift3/mysql-57-rhel7
+              ports:
+                - containerPort: 3306
+                  protocol: TCP
+              env:
+                - name: MYSQL_DATABASE
+                  value: ${X_DB_NAME}
+                - name: MYSQL_PASSWORD
+                  value: ${X_DB_PWD}
+                - name: MYSQL_SERVICE
+                  value: ${X_SVC}
+                - name: MYSQL_USER
+                  value: ${X_DB_USER}
+              volumeMounts:
+                - mountPath: /var/lib/mysql/data
+                  name: volume-mydisk
+                  subPath: mysql
+          volumes:
+            - name: volume-mydisk
+              persistentVolumeClaim:
+                claimName: mydisk
+
+                
+                
+                
+                
+             
+
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
