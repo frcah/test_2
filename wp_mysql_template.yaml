@@ -7,7 +7,7 @@ metadata:
   annotations:
     openshift.io/display-name: WP + MySQL
     description: >
-      WordPress running on Openshift Online. Sinlge persistent volume for everything.
+      WordPress running on Openshift Online. Single persistent volume for everything.
     iconClass: icon-php
 labels:
   template: wp-mysql
@@ -79,7 +79,7 @@ objects:
     metadata:
       name: ${X_SVC}
       annotations:
-        description: Keeps track of changes in the application image
+        description: Track changes in application image
       labels:
         app: ${X_SVC}
 
@@ -138,6 +138,7 @@ objects:
         deploymentconfig: ${X_SVC}
       strategy:
         type: Recreate
+      test: false
       triggers:
         - type: ImageChange
           imageChangeParams:
@@ -153,12 +154,12 @@ objects:
             containerNames:
               - mysql
             from:
+              namespace: openshift
               kind: ImageStreamTag
               name: mysql:5.7
         - type: ConfigChange
       template:
         metadata:
-#          name: ${X_SVC}
           labels:
             app: ${X_SVC}
             deploymentconfig: ${X_SVC}
@@ -166,7 +167,6 @@ objects:
           containers:
             - name: ${X_SVC}
               image: ${X_SVC}:latest
-              imagePullPolicy: Always
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -184,8 +184,7 @@ objects:
                   name: volume-mydisk
                   subPath: wp
             - name: mysql
-              image: openshift/mysql:5.7
-              imagePullPolicy: IfNotPresent
+              image: docker-registry.default.svc:5000/openshift/mysql:5.7
               ports:
                 - containerPort: 3306
                   protocol: TCP
@@ -202,8 +201,6 @@ objects:
                 - mountPath: /var/lib/mysql/data
                   name: volume-mydisk
                   subPath: mysql
-          dnsPolicy: ClusterFirst
-          restartPolicy: Always
           volumes:
             - name: volume-mydisk
               persistentVolumeClaim:
@@ -230,7 +227,8 @@ objects:
           protocol: TCP
           targetPort: 3306
       selector:
-        name: ${X_SVC}
+        app: ${X_SVC}
+        deploymentconfig: ${X_SVC}
 
   ############################
   # Route
